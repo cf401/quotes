@@ -8,10 +8,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -94,46 +91,24 @@ public class App {
         return output;
     }
 
-    public void updateQuotes(Quote wisdom) throws IOException {
+    public void saveFile(List<Quote> quotes) throws IOException {
 
-        Gson gson = new Gson();
-        //path
-        String path = "src/main/resources/recentquotes.json";
-        //scanner reads file
-        String text = new String (Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
+        try {
 
-        //creates an artifact for gson casting
-        TypeToken<List<Quote>> token = new TypeToken<>(){};
-        //creates from text, list object
-        List<Quote> quotes = gson.fromJson(text, token.getType());
+            //file output name
+            String fileName = "src/main/resources/output.json";
 
+            //take our list of quote and put them back into json format.
+            Gson gson = new Gson();
+            FileWriter file = new FileWriter(fileName);
+            gson.toJson(quotes,file);
+            file.close();
 
-//        JsonArray inputObj  = gson.fromJson(text, JsonArray.class);
-//        JsonObject newObject = new JsonObject();
-//        newObject.addProperty("tags", "[]");
-//        newObject.addProperty("author", "Ron Swanson");
-//        newObject.addProperty("likes", "0 likes");
-//        newObject.addProperty("text", wisdom);
-//        inputObj.get(0).getAsJsonArray().add(newObject);
-//        System.out.println(inputObj);
-
-
-        /*
-        public static void appendStrToFile(String fileName,String str)
-        {
-            try {
-
-                // Open given file in append mode.
-                BufferedWriter out = new BufferedWriter(
-                       new FileWriter(fileName, true));
-                out.write(str);
-                out.close();
-            }
-            catch (IOException e) {
-                System.out.println("exception occoured" + e);
-            }
         }
-        */
+        catch (IOException e) {
+            System.out.println("harsh times.  couldn't print this thing" + e);
+        }
+
     }
 
     public List<Quote> addQuote(String wisdom, List<Quote> quotes){
@@ -159,12 +134,15 @@ public class App {
             //ONLINE: call quote from an API
             String wisdom = app.SwansonMe();
             //print
-            //System.out.println(wisdom);
+            System.out.println(wisdom);
 
-            //save quote to our file
+            //read all quotes into a list
             List<Quote> quotes = app.readFile();
+            //add quote to list
             quotes = app.addQuote(wisdom, quotes);
-            System.out.println(quotes.get(quotes.size()-1).toString());
+            //save quote to file output
+            app.saveFile(quotes);
+
         }
         else {
             //OFFLINE: read file into data structure
