@@ -5,12 +5,14 @@ package quotes;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
@@ -18,6 +20,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Random;
@@ -91,7 +94,7 @@ public class App {
         return output;
     }
 
-    public void updateQuotes(String wisdom){
+    public void updateQuotes(Quote wisdom) throws IOException {
 
         Gson gson = new Gson();
         //path
@@ -100,24 +103,19 @@ public class App {
         String text = new String (Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
 
         //creates an artifact for gson casting
-        //TypeToken<List<Quote>> token = new TypeToken<>(){};
+        TypeToken<List<Quote>> token = new TypeToken<>(){};
         //creates from text, list object
-        //List<Quote> quotes = gson.fromJson(text, token.getType());
+        List<Quote> quotes = gson.fromJson(text, token.getType());
 
 
-        JsonObject inputObj  = gson.fromJson(text, JsonObject.class);
-
-        JsonObject newObject = new JsonObject() ;
-        newObject.addProperty("", wisdom);
-        newObject.addProperty("lon", "newValue");
-        inputObj.get("results").getAsJsonArray().add(newObject);
-        System.out.println(inputObj);
-
-
-        //  "tags": [],
-        //  "author": "Charles Dickens",
-        //  "likes": "497 likes",
-        //  "text": " “Ask no questions, and you'll be told no lies.” "
+//        JsonArray inputObj  = gson.fromJson(text, JsonArray.class);
+//        JsonObject newObject = new JsonObject();
+//        newObject.addProperty("tags", "[]");
+//        newObject.addProperty("author", "Ron Swanson");
+//        newObject.addProperty("likes", "0 likes");
+//        newObject.addProperty("text", wisdom);
+//        inputObj.get(0).getAsJsonArray().add(newObject);
+//        System.out.println(inputObj);
 
 
         /*
@@ -138,6 +136,20 @@ public class App {
         */
     }
 
+    public List<Quote> addQuote(String wisdom, List<Quote> quotes){
+        Gson gson = new Gson();
+        //new arraylist for tags
+        ArrayList<String> tags = new ArrayList<>();
+        //remove brackets
+        String[] jsonWisdom = gson.fromJson(wisdom, String[].class);
+        //create new quote
+        Quote quote = new Quote(tags, "Ron Swanson", "0", jsonWisdom[0]);
+        //push into quotes
+        quotes.add(quote);
+
+        return quotes;
+    }
+
     public static void main(String[] args) throws IOException {
         //create instance
         App app = new App();
@@ -147,10 +159,12 @@ public class App {
             //ONLINE: call quote from an API
             String wisdom = app.SwansonMe();
             //print
-            System.out.println(wisdom);
+            //System.out.println(wisdom);
 
             //save quote to our file
-
+            List<Quote> quotes = app.readFile();
+            quotes = app.addQuote(wisdom, quotes);
+            System.out.println(quotes.get(quotes.size()-1).toString());
         }
         else {
             //OFFLINE: read file into data structure
