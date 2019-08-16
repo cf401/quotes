@@ -7,6 +7,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -44,4 +46,32 @@ public class AppTest {
     public void randomQuote() {
         assertTrue(randomQuote.length()>1);
     }
+
+
+    @Test
+    public void addQuoteTest() {
+        String wisdom = "[\"I don't want to paint with a broad brush here, but every single contractor in the world is a miserable, incompetent thief.\"]";
+        quotes = app.addQuote(wisdom, quotes);
+        String expected = quotes.get(quotes.size()-1).toString();
+        String actual = "text: I don't want to paint with a broad brush here, but every single contractor in the world is a miserable, incompetent thief.\n" +
+                "author: Ron Swanson";
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void isInternetOnlineTest() throws UnknownHostException {
+        boolean expected = app.isInternetOnline();
+        boolean actual = true;
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void SwansonMeTest() {
+        String expected = app.SwansonMe();
+        assertTrue(expected.length() > 1);
+        assertTrue(expected!=null);
+    }
+
+
+
 }

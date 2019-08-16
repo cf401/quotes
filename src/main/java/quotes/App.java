@@ -5,12 +5,24 @@ package quotes;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Array;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 
 public class App {
@@ -45,17 +57,124 @@ public class App {
         return output;
     }
 
+
+    public String SwansonMe() {
+        try {
+            //create connection and send it.
+            URL url = new URL("https://ron-swanson-quotes.herokuapp.com/v2/quotes");
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+
+            //read in answer via string
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputByLine;
+            StringBuilder content = new StringBuilder();
+
+            //while there's content, append.
+            while ((inputByLine = in.readLine()) != null)
+            {
+                content.append(inputByLine);
+            }
+            in.close();
+            return content.toString();
+
+        } catch (IOException e){
+            //print error
+            e.printStackTrace();
+        }
+        return "failed to retrieve";
+    }
+
+    public boolean isInternetOnline() throws UnknownHostException {
+        //returns true if offline, false if internet is connected.
+        boolean output = !( "127.0.0.1"
+                    .equals(InetAddress
+                        .getLocalHost()
+                        .getHostAddress() ) );
+        return output;
+    }
+
+    public void updateQuotes(Quote wisdom) throws IOException {
+
+        Gson gson = new Gson();
+        //path
+        String path = "src/main/resources/recentquotes.json";
+        //scanner reads file
+        String text = new String (Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
+
+        //creates an artifact for gson casting
+        TypeToken<List<Quote>> token = new TypeToken<>(){};
+        //creates from text, list object
+        List<Quote> quotes = gson.fromJson(text, token.getType());
+
+
+//        JsonArray inputObj  = gson.fromJson(text, JsonArray.class);
+//        JsonObject newObject = new JsonObject();
+//        newObject.addProperty("tags", "[]");
+//        newObject.addProperty("author", "Ron Swanson");
+//        newObject.addProperty("likes", "0 likes");
+//        newObject.addProperty("text", wisdom);
+//        inputObj.get(0).getAsJsonArray().add(newObject);
+//        System.out.println(inputObj);
+
+
+        /*
+        public static void appendStrToFile(String fileName,String str)
+        {
+            try {
+
+                // Open given file in append mode.
+                BufferedWriter out = new BufferedWriter(
+                       new FileWriter(fileName, true));
+                out.write(str);
+                out.close();
+            }
+            catch (IOException e) {
+                System.out.println("exception occoured" + e);
+            }
+        }
+        */
+    }
+
+    public List<Quote> addQuote(String wisdom, List<Quote> quotes){
+        Gson gson = new Gson();
+        //new arraylist for tags
+        ArrayList<String> tags = new ArrayList<>();
+        //remove brackets
+        String[] jsonWisdom = gson.fromJson(wisdom, String[].class);
+        //create new quote
+        Quote quote = new Quote(tags, "Ron Swanson", "0", jsonWisdom[0]);
+        //push into quotes
+        quotes.add(quote);
+
+        return quotes;
+    }
+
     public static void main(String[] args) throws IOException {
         //create instance
         App app = new App();
-        
-        //read file into data structure
-        List<Quote> quotes = app.readFile();
 
-        //call a random quote
-        String randomQuote = app.randomQuote(quotes);
+        //is the internet working?
+        if ( app.isInternetOnline() ) {
+            //ONLINE: call quote from an API
+            String wisdom = app.SwansonMe();
+            //print
+            //System.out.println(wisdom);
 
-        //print
-        System.out.println(randomQuote);
+            //save quote to our file
+            List<Quote> quotes = app.readFile();
+            quotes = app.addQuote(wisdom, quotes);
+            System.out.println(quotes.get(quotes.size()-1).toString());
+        }
+        else {
+            //OFFLINE: read file into data structure
+            List<Quote> quotes = app.readFile();
+            //call a random quote locally
+            String randomQuote = app.randomQuote(quotes);
+            //print
+            System.out.println(randomQuote);
+        }
+
     }
 }
+
