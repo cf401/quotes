@@ -10,10 +10,7 @@ import com.google.gson.JsonObject;
 
 import java.io.*;
 import java.lang.reflect.Array;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.URL;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -84,11 +81,28 @@ public class App {
 
     public boolean isInternetOnline() throws UnknownHostException {
         //returns true if offline, false if internet is connected.
-        boolean output = !( "127.0.0.1"
+        boolean output =  "127.0.0.1"
                     .equals(InetAddress
                         .getLocalHost()
-                        .getHostAddress() ) );
+                        .getHostAddress() ) ;
         return output;
+    }
+// https://stackoverflow.com/questions/1402005/how-to-check-if-internet-connection-is-present-in-java
+    public boolean checkInternetConnection() {
+        boolean status = false;
+        Socket sock = new Socket();
+        InetSocketAddress address = new InetSocketAddress("www.google.com", 80);
+        try {
+            sock.connect(address, 3000);
+            if(sock.isConnected()) status = true;
+        }
+        catch(Exception e) { status = false; }
+        finally {
+            try {
+                sock.close();
+            } catch(Exception e){}
+        }
+        return status;
     }
 
     public void saveFile(List<Quote> quotes) throws IOException {
@@ -128,9 +142,9 @@ public class App {
     public static void main(String[] args) throws IOException {
         //create instance
         App app = new App();
-
+        System.out.println(app.checkInternetConnection() );
         //is the internet working?
-        if ( app.isInternetOnline() ) {
+        if ( app.checkInternetConnection() ) {
             //ONLINE: call quote from an API
             String wisdom = app.SwansonMe();
             //print
